@@ -1,0 +1,1114 @@
+/**
+ * STG Payments — admin.
+ *
+ * Three rules shaped this file.
+ *
+ * **It is scoped.** Every selector sits under `.stg-pay` or `.stg-pay-*`, and
+ * the stylesheet is only enqueued on this plugin's own screens. An admin
+ * stylesheet that leaks is a stylesheet that restyles somebody else's plugin,
+ * and payment screens are not worth that.
+ *
+ * **It extends WordPress rather than replacing it.** The markup uses core's
+ * own `.wrap`, `.nav-tab-wrapper`, `.form-table`, `.button`, `.notice` and
+ * `.wp-list-table`, so the screens inherit core's behaviour, responsive rules,
+ * focus styles and future changes for free. What is added here is the layer
+ * core has no opinion about: status cards, badges, a summary grid. Nothing
+ * here overrides a core component.
+ *
+ * **It takes its accent colour from WordPress, not from STG.** Every
+ * administrator picks a colour scheme in their own profile, and core publishes
+ * that choice as custom properties on the body element. Those are read here
+ * rather than hardcoding the STG brand purple, so the switches, chips and
+ * focus rings match the Save button sitting beneath them. A plugin that paints
+ * its own brand over wp-admin is overriding a preference the user set
+ * deliberately - and, worse, looks broken next to every core control that did
+ * respect it. STG purple stays on the front end, where it belongs.
+ *
+ * No gradients, no animations beyond a reduced-motion-aware spinner, no
+ * decorative iconography. Professional over flashy, per the brief.
+ */
+
+.stg-pay {
+	/*
+	 * The administrator's own colour scheme, published by core on
+	 * `body.admin-color-<scheme>` from
+	 * wp-includes/css/dist/base-styles/admin-schemes.css, which `wp-admin`
+	 * depends on and is therefore present on every admin screen. All eight
+	 * shipped schemes define all three properties; the fallbacks cover a stale
+	 * `admin_color` user option naming a scheme that no longer exists, and are
+	 * core's own default (Modern) rather than anything of STG's.
+	 *
+	 * `-darker-20` is used wherever the accent is text. Several schemes -
+	 * Midnight's #cf4339, Sunrise's #ad631e - fall below 4.5:1 on white at
+	 * full strength, and core makes the same substitution for the same reason
+	 * (see `.button-link:hover` in any scheme's colors.css).
+	 */
+	--stg-pay-primary: var(--wp-admin-theme-color, #3858e9);
+	--stg-pay-primary-ink: var(--wp-admin-theme-color-darker-20, #1d35c6);
+	--stg-pay-primary-soft: rgba(var(--wp-admin-theme-color--rgb, 56, 88, 233), 0.08);
+	--stg-pay-ink: #14161f;
+	--stg-pay-muted: #5c6275;
+	--stg-pay-faint: #6e7588;
+	--stg-pay-line: #e4e6ef;
+	--stg-pay-surface: #fff;
+	--stg-pay-surface-2: #f6f7fb;
+	--stg-pay-success: #1b8a5a;
+	--stg-pay-success-bg: #e6f5ee;
+	--stg-pay-warning: #b26a00;
+	--stg-pay-warning-bg: #fcf1df;
+	--stg-pay-danger: #c4342b;
+	--stg-pay-danger-bg: #fbe9e7;
+	--stg-pay-info: #2c5aa0;
+	--stg-pay-info-bg: #e8effa;
+	--stg-pay-radius: 8px;
+}
+
+/* ------------------------------------------------------------------ header */
+
+/*
+ * The heading itself is core's `.wp-heading-inline` plus `.page-title-action`,
+ * so there is no custom header layout to style — only the subtitle, which core
+ * has no equivalent for. See views/partials/header.php for why fighting core's
+ * notice placement was the wrong approach.
+ */
+.stg-pay__subtitle {
+	margin: 6px 0 0;
+	color: var(--stg-pay-muted);
+	font-size: 13px;
+	max-width: 70ch;
+}
+
+/* ------------------------------------------------------------ status cards */
+
+.stg-pay-cards {
+	max-inline-size: 1100px;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+	gap: 12px;
+	margin-block: 16px;
+}
+
+.stg-pay-card {
+	background: var(--stg-pay-surface);
+	border: 1px solid var(--stg-pay-line);
+	border-radius: var(--stg-pay-radius);
+	padding: 14px 16px;
+	/*
+	 * A 3px edge carries the card's state. It is redundant with the label
+	 * inside, on purpose: the label is what conveys the meaning and this only
+	 * has to make the grid scannable.
+	 */
+	border-inline-start: 3px solid var(--stg-pay-line);
+}
+
+.stg-pay-card--ok {
+	border-inline-start-color: var(--stg-pay-success);
+}
+
+.stg-pay-card--warn {
+	border-inline-start-color: var(--stg-pay-warning);
+}
+
+.stg-pay-card--bad {
+	border-inline-start-color: var(--stg-pay-danger);
+}
+
+.stg-pay-card--info {
+	border-inline-start-color: var(--stg-pay-primary);
+}
+
+.stg-pay-card__label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--stg-pay-faint);
+	margin-block-end: 6px;
+}
+
+.stg-pay-card__value {
+	display: block;
+	font-size: 17px;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--stg-pay-ink);
+}
+
+.stg-pay-card__meta {
+	display: block;
+	margin-block-start: 4px;
+	font-size: 12px;
+	color: var(--stg-pay-muted);
+}
+
+/* ---------------------------------------------------------------- sections */
+
+/*
+ * Capped, not full-bleed.
+ *
+ * On a wide monitor an uncapped settings panel puts the switch a hand-span
+ * away from the label it belongs to, and the eye loses the association. The
+ * cap is generous enough that nothing wraps awkwardly at 1280px.
+ */
+.stg-pay-section {
+	max-inline-size: 1100px;
+	background: var(--stg-pay-surface);
+	border: 1px solid var(--stg-pay-line);
+	border-radius: var(--stg-pay-radius);
+	padding: 4px 20px 16px;
+	margin-block-end: 16px;
+}
+
+.stg-pay-section > h2 {
+	/*
+	 * Larger than a row title, which is the point. Both were 14px semibold,
+	 * so "Payment methods" and "Apple Pay" carried identical weight and the
+	 * section stopped reading as a group.
+	 */
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--stg-pay-ink);
+	margin-block: 18px 2px;
+	padding: 0;
+}
+
+.stg-pay-section__intro {
+	margin-block: 0 8px;
+	color: var(--stg-pay-muted);
+	max-width: 70ch;
+}
+
+.stg-pay-section .form-table th {
+	width: 220px;
+	padding-block: 14px;
+}
+
+.stg-pay-section .form-table td {
+	padding-block: 14px;
+}
+
+.stg-pay-section .form-table .description {
+	max-width: 62ch;
+}
+
+/* ------------------------------------------------------------------ badges */
+
+.stg-pay-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.7;
+	white-space: nowrap;
+	border: 1px solid transparent;
+}
+
+.stg-pay-badge__glyph {
+	font-size: 11px;
+	line-height: 1;
+}
+
+.stg-pay-badge--paid {
+	background: var(--stg-pay-success-bg);
+	color: var(--stg-pay-success);
+	border-color: color-mix(in srgb, var(--stg-pay-success) 25%, transparent);
+}
+
+.stg-pay-badge--pending {
+	background: var(--stg-pay-info-bg);
+	color: var(--stg-pay-info);
+	border-color: color-mix(in srgb, var(--stg-pay-info) 25%, transparent);
+}
+
+.stg-pay-badge--failed,
+.stg-pay-badge--flagged {
+	background: var(--stg-pay-danger-bg);
+	color: var(--stg-pay-danger);
+	border-color: color-mix(in srgb, var(--stg-pay-danger) 25%, transparent);
+}
+
+.stg-pay-badge--expired,
+.stg-pay-badge--voided,
+.stg-pay-badge--refunded {
+	background: var(--stg-pay-surface-2);
+	color: var(--stg-pay-muted);
+	border-color: var(--stg-pay-line);
+}
+
+.stg-pay-badge--mode-live {
+	background: var(--stg-pay-warning-bg);
+	color: var(--stg-pay-warning);
+	border-color: color-mix(in srgb, var(--stg-pay-warning) 30%, transparent);
+}
+
+.stg-pay-badge--mode-test {
+	background: var(--stg-pay-surface-2);
+	color: var(--stg-pay-muted);
+	border-color: var(--stg-pay-line);
+}
+
+.stg-pay-badge--mode-fake {
+	background: var(--stg-pay-danger-bg);
+	color: var(--stg-pay-danger);
+	border-color: color-mix(in srgb, var(--stg-pay-danger) 30%, transparent);
+}
+
+/* -------------------------------------------------------------- checklists */
+
+.stg-pay-checklist {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.stg-pay-checklist li {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding-block: 6px;
+	border-block-end: 1px solid var(--stg-pay-line);
+	margin: 0;
+}
+
+.stg-pay-checklist li:last-child {
+	border-block-end: 0;
+}
+
+.stg-pay-check {
+	flex: 0 0 auto;
+	inline-size: 18px;
+	block-size: 18px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: 700;
+	margin-block-start: 1px;
+}
+
+.stg-pay-check--yes {
+	background: var(--stg-pay-success-bg);
+	color: var(--stg-pay-success);
+}
+
+.stg-pay-check--no {
+	background: var(--stg-pay-danger-bg);
+	color: var(--stg-pay-danger);
+}
+
+/* ------------------------------------------------------------- credentials */
+
+/* ------------------------------------------------------------ credentials */
+
+/*
+ * One credential: a box when nothing is saved, a masked read-only line when
+ * something is. The masked line is text, never an input, so it cannot be
+ * taken for a field holding a value.
+ */
+.stg-pay-key {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	max-inline-size: 46rem;
+}
+
+.stg-pay-key__input {
+	flex: 1 1 18rem;
+	min-inline-size: 0;
+	max-inline-size: 28rem;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	/* A key is Latin even when the admin is in Arabic. */
+	direction: ltr;
+}
+
+.stg-pay-key__mask {
+	flex: 1 1 18rem;
+	min-inline-size: 0;
+	max-inline-size: 28rem;
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-block-size: 40px;
+	padding: 6px 12px;
+	border: 1px solid var(--stg-pay-line);
+	border-radius: var(--stg-pay-radius);
+	background: var(--stg-pay-surface-2);
+	color: var(--stg-pay-muted);
+	direction: ltr;
+	unicode-bidi: isolate;
+	overflow: hidden;
+}
+
+.stg-pay-key__mask .dashicons {
+	flex: 0 0 auto;
+	color: var(--stg-pay-faint);
+}
+
+.stg-pay-key__mask code {
+	padding: 0;
+	background: none;
+	color: var(--stg-pay-ink);
+	font-size: 13px;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: clip;
+	user-select: none;
+}
+
+.stg-pay-status {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.stg-pay-status--set {
+	background: var(--stg-pay-success-bg);
+	color: var(--stg-pay-success);
+}
+
+.stg-pay-status--none {
+	background: var(--stg-pay-surface-2);
+	border: 1px solid var(--stg-pay-line);
+	color: var(--stg-pay-muted);
+}
+
+/* Destructive, and looks it - but quietly until it is the thing in focus. */
+.wp-core-ui .stg-pay .stg-pay-key__remove,
+.wp-core-ui .stg-pay .stg-pay-key__remove:visited {
+	flex: 0 0 auto;
+	border-color: var(--stg-pay-danger);
+	color: var(--stg-pay-danger);
+	background: var(--stg-pay-surface);
+}
+
+.wp-core-ui .stg-pay .stg-pay-key__remove:hover,
+.wp-core-ui .stg-pay .stg-pay-key__remove:focus {
+	border-color: var(--stg-pay-danger);
+	background: var(--stg-pay-danger-bg);
+	color: var(--stg-pay-danger);
+}
+
+.wp-core-ui .stg-pay .stg-pay-key__remove:focus {
+	box-shadow: 0 0 0 1px var(--stg-pay-danger);
+}
+
+.wp-core-ui .stg-pay .stg-pay-danger,
+.wp-core-ui .stg-pay-dialog .stg-pay-danger {
+	border-color: var(--stg-pay-danger);
+	background: var(--stg-pay-danger);
+	color: #fff;
+}
+
+.wp-core-ui .stg-pay-dialog .stg-pay-danger:hover,
+.wp-core-ui .stg-pay-dialog .stg-pay-danger:focus {
+	border-color: #a02a22;
+	background: #a02a22;
+	color: #fff;
+}
+
+.wp-core-ui .stg-pay-dialog .stg-pay-danger:focus {
+	box-shadow: 0 0 0 1px #fff, 0 0 0 3px var(--stg-pay-danger);
+}
+
+.stg-pay .button.is-busy,
+.stg-pay-dialog .button.is-busy {
+	opacity: 0.7;
+	cursor: progress;
+	pointer-events: none;
+}
+
+/* Is this pair of keys complete? Stated, under the heading. */
+.stg-pay-ready {
+	display: inline-block;
+	margin: 0 0 4px;
+	padding: 4px 10px;
+	border-radius: var(--stg-pay-radius);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.stg-pay-ready.is-ready {
+	background: var(--stg-pay-success-bg);
+	color: var(--stg-pay-success);
+}
+
+.stg-pay-section > h2 .stg-pay-badge {
+	margin-inline-start: 8px;
+	vertical-align: middle;
+}
+
+.stg-pay-section .notice.stg-pay-incomplete {
+	margin: 4px 0 8px;
+}
+
+/* ----------------------------------------------------- remove confirmation */
+
+.stg-pay-dialog {
+	box-sizing: border-box;
+	inline-size: min( 32rem, calc( 100vw - 32px ) );
+	max-block-size: calc( 100vh - 32px );
+	margin: auto;
+	padding: 0;
+	border: 1px solid var(--stg-pay-line, #e4e6ef);
+	border-radius: 12px;
+	background: var(--stg-pay-surface, #fff);
+	color: var(--stg-pay-ink, #14161f);
+	box-shadow: 0 20px 50px rgba( 0, 0, 0, 0.25 );
+	overflow: auto;
+}
+
+.stg-pay-dialog::backdrop {
+	background: rgba( 15, 18, 30, 0.55 );
+}
+
+/* Opened by the server, with no script: a panel in the page, not an overlay. */
+.stg-pay-dialog[open]:not(:modal) {
+	position: static;
+	margin: 0 0 20px;
+	inline-size: auto;
+	max-inline-size: 46rem;
+	border-color: var(--stg-pay-danger, #c4342b);
+	box-shadow: none;
+}
+
+.stg-pay-dialog form {
+	padding: 20px 24px;
+}
+
+.stg-pay-dialog__title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 12px;
+	font-size: 18px;
+	line-height: 1.3;
+}
+
+.stg-pay-dialog__title .dashicons {
+	color: var(--stg-pay-danger, #c4342b);
+}
+
+.stg-pay-dialog__what {
+	margin: 0 0 8px;
+	font-size: 14px;
+}
+
+.stg-pay-dialog__impact {
+	margin: 0 0 12px;
+	padding: 10px 12px;
+	border-radius: 8px;
+	background: var(--stg-pay-warning-bg, #fcf1df);
+	color: var(--stg-pay-ink, #14161f);
+}
+
+.stg-pay-dialog__facts {
+	margin: 0 0 16px;
+	padding-inline-start: 18px;
+	list-style: disc;
+	color: var(--stg-pay-muted, #5c6275);
+}
+
+.stg-pay-dialog__facts li {
+	margin-block-end: 4px;
+}
+
+.stg-pay-dialog__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+@media ( max-width: 600px ) {
+	.stg-pay-key__mask,
+	.stg-pay-key__input {
+		flex-basis: 100%;
+		max-inline-size: none;
+	}
+
+	.stg-pay-dialog__actions .button {
+		flex: 1 1 auto;
+		text-align: center;
+	}
+}
+
+.stg-pay-locked {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: var(--stg-pay-surface-2);
+	border: 1px solid var(--stg-pay-line);
+	border-radius: var(--stg-pay-radius);
+	padding: 6px 10px;
+	font-size: 12px;
+}
+
+.stg-pay-locked code {
+	background: none;
+	padding: 0;
+	font-size: 12px;
+}
+
+/* --------------------------------------------------------- webhook address */
+
+.stg-pay-endpoint {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.stg-pay-endpoint input {
+	flex: 1 1 28rem;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12px;
+	direction: ltr;
+	background: var(--stg-pay-surface-2);
+}
+
+/* -------------------------------------------------------------- list table */
+
+.stg-pay-filters {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-block: 12px;
+}
+
+/* Wide enough for its own placeholder, which was clipping to "Moyasar i". */
+.stg-pay-filters input[type="search"] {
+	inline-size: 17rem;
+}
+
+.stg-pay-table code {
+	font-size: 12px;
+	direction: ltr;
+	unicode-bidi: isolate;
+}
+
+.stg-pay-table .column-amount {
+	text-align: end;
+}
+
+.stg-pay-table__flag {
+	display: block;
+	margin-block-start: 3px;
+	font-size: 11px;
+	color: var(--stg-pay-danger);
+}
+
+.stg-pay-table__muted {
+	color: var(--stg-pay-faint);
+}
+
+/* ------------------------------------------------------------ empty states */
+
+.stg-pay-empty {
+	text-align: center;
+	padding: 48px 24px;
+	background: var(--stg-pay-surface);
+	border: 1px solid var(--stg-pay-line);
+	border-radius: var(--stg-pay-radius);
+}
+
+.stg-pay-empty h2 {
+	margin-block: 0 8px;
+	font-size: 16px;
+}
+
+.stg-pay-empty p {
+	margin-block: 0 16px;
+	color: var(--stg-pay-muted);
+	max-width: 52ch;
+	margin-inline: auto;
+}
+
+/* ---------------------------------------------------------------- timeline */
+
+.stg-pay-timeline {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.stg-pay-timeline li {
+	position: relative;
+	padding-inline-start: 24px;
+	padding-block: 0 18px;
+	margin: 0;
+}
+
+.stg-pay-timeline li::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 4px;
+	inset-block-start: 5px;
+	inline-size: 9px;
+	block-size: 9px;
+	border-radius: 50%;
+	background: var(--stg-pay-line);
+	border: 2px solid var(--stg-pay-surface);
+	box-shadow: 0 0 0 1px var(--stg-pay-line);
+}
+
+.stg-pay-timeline li.is-done::before {
+	background: var(--stg-pay-success);
+	box-shadow: 0 0 0 1px var(--stg-pay-success);
+}
+
+.stg-pay-timeline li.is-bad::before {
+	background: var(--stg-pay-danger);
+	box-shadow: 0 0 0 1px var(--stg-pay-danger);
+}
+
+/* The connecting rule, drawn on every step but the last. */
+.stg-pay-timeline li:not(:last-child)::after {
+	content: "";
+	position: absolute;
+	inset-inline-start: 8px;
+	inset-block-start: 16px;
+	inline-size: 1px;
+	block-size: calc(100% - 12px);
+	background: var(--stg-pay-line);
+}
+
+.stg-pay-timeline__what {
+	font-weight: 600;
+}
+
+.stg-pay-timeline__when {
+	display: block;
+	font-size: 12px;
+	color: var(--stg-pay-muted);
+}
+
+/* ------------------------------------------------------------ detail lists */
+
+.stg-pay-dl {
+	margin: 0;
+	display: grid;
+	grid-template-columns: minmax(8rem, 12rem) 1fr;
+	gap: 0;
+}
+
+.stg-pay-dl dt {
+	color: var(--stg-pay-muted);
+	padding-block: 7px;
+	border-block-end: 1px solid var(--stg-pay-line);
+	margin: 0;
+}
+
+.stg-pay-dl dd {
+	margin: 0;
+	padding-block: 7px;
+	border-block-end: 1px solid var(--stg-pay-line);
+	word-break: break-word;
+}
+
+.stg-pay-dl dt:last-of-type,
+.stg-pay-dl dd:last-of-type {
+	border-block-end: 0;
+}
+
+.stg-pay-columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 16px;
+	align-items: start;
+}
+
+/* -------------------------------------------------------------- small/dark */
+
+@media (max-width: 782px) {
+	.stg-pay-section {
+		padding-inline: 12px;
+	}
+
+	.stg-pay-dl {
+		grid-template-columns: 1fr;
+	}
+
+	.stg-pay-dl dt {
+		border-block-end: 0;
+		padding-block-end: 0;
+		font-size: 12px;
+	}
+}
+
+/*
+ * WordPress ships light and dark admin colour schemes, and `prefers-color-scheme`
+ * is the closest signal available to a plugin - core does not expose the chosen
+ * scheme in CSS. Kept to surfaces and text so a mismatch is never unreadable.
+ */
+@media (prefers-color-scheme: dark) {
+	.stg-pay {
+		--stg-pay-surface: #1e2327;
+		--stg-pay-surface-2: #23282d;
+		--stg-pay-line: #3c434a;
+		--stg-pay-ink: #f0f0f1;
+		--stg-pay-muted: #bdc1c6;
+		--stg-pay-faint: #a7aaad;
+	}
+}
+
+/* ============================================================== controls ==
+ *
+ * The settings screens use a row layout rather than core's `.form-table`:
+ * label and explanation on one side, the control on the other, with a rule
+ * between rows and a hover tint. `.form-table` puts the label in a narrow
+ * fixed column and the control in a wide one, which for a screen that is
+ * mostly on/off switches wastes the right half of the page and leaves the
+ * explanatory text stranded in the middle.
+ */
+
+.stg-pay-rows {
+	margin: 0;
+	border-block-start: 1px solid var(--stg-pay-line);
+}
+
+.stg-pay-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 24px;
+	padding: 16px 4px;
+	border-block-end: 1px solid var(--stg-pay-line);
+	transition: background 0.12s ease;
+}
+
+.stg-pay-row:hover {
+	background: var(--stg-pay-surface-2);
+}
+
+.stg-pay-row__text {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+
+.stg-pay-row__title {
+	display: block;
+	font-weight: 600;
+	font-size: 13.5px;
+	color: var(--stg-pay-ink);
+	margin-block-end: 2px;
+}
+
+/* The title is a <label>, so the whole thing is a click target for its input. */
+label.stg-pay-row__title {
+	cursor: pointer;
+}
+
+.stg-pay-row__desc {
+	margin: 0;
+	color: var(--stg-pay-muted);
+	font-size: 13px;
+	line-height: 1.5;
+	max-inline-size: 68ch;
+}
+
+.stg-pay-row__control {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding-block-start: 2px;
+}
+
+/* ---------------------------------------------------------------- switch --
+ *
+ * A real `<input type="checkbox">` with `appearance: none`, not a div with a
+ * click handler, so it keeps the native control's keyboard focus, space-to-
+ * toggle, screen-reader role and state, `:disabled`, and participation in the
+ * form post. No JavaScript is involved.
+ *
+ * **Every selector here is prefixed `input[type="checkbox"]`, and that is not
+ * cosmetic.** WordPress styles checkboxes with `input[type="checkbox"]`, which
+ * is specificity (0,0,1,1) — one attribute AND one element. A bare
+ * `.stg-pay-switch` is (0,0,1,0) and loses on the element component, however
+ * late it loads. The first version of this file made exactly that mistake, and
+ * core's rules won: `width: 1rem` collapsed the 44px track to a square,
+ * `border-radius: 2px` squared off the pill, and
+ * `input[type="checkbox"]:checked::before` replaced the thumb with a
+ * 1.3125rem dashicon SVG carrying negative margins — which is why the "thumb"
+ * appeared outside the track, overlapping the label beside it.
+ *
+ * Adding the attribute selector back takes each rule to (0,0,2,1) and the
+ * checked pseudo-element to (0,0,3,2), both above core. No `!important` is
+ * needed, and none is used.
+ */
+
+input[type="checkbox"].stg-pay-switch {
+	appearance: none;
+	-webkit-appearance: none;
+	position: relative;
+	flex: 0 0 auto;
+	/* Logical and physical, because core sets `width` and `min-width`. */
+	inline-size: 44px;
+	block-size: 24px;
+	width: 44px;
+	height: 24px;
+	min-width: 44px;
+	margin: 0;
+	border: 0;
+	border-radius: 999px;
+	background: #c3c4c7;
+	box-shadow: none;
+	cursor: pointer;
+	vertical-align: middle;
+	transition: background 0.15s ease;
+}
+
+input[type="checkbox"].stg-pay-switch::before {
+	/* Overrides core's dashicon SVG, which is set on `:checked::before`. */
+	content: "";
+	position: absolute;
+	inset-block-start: 3px;
+	inset-inline-start: 3px;
+	float: none;
+	inline-size: 18px;
+	block-size: 18px;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+	transition: inset-inline-start 0.15s ease;
+}
+
+input[type="checkbox"].stg-pay-switch:checked {
+	background: var(--stg-pay-primary);
+	border-color: var(--stg-pay-primary);
+}
+
+/*
+ * (0,0,3,2) — must beat core's `input[type="checkbox"]:checked::before`, which
+ * is (0,0,2,2) and would otherwise reinstate the checkmark SVG on top of the
+ * thumb.
+ */
+input[type="checkbox"].stg-pay-switch:checked::before {
+	content: "";
+	inset-inline-start: 23px;
+	margin: 0;
+	width: 18px;
+	height: 18px;
+}
+
+input[type="checkbox"].stg-pay-switch:focus-visible {
+	outline: 2px solid var(--stg-pay-primary);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+input[type="checkbox"].stg-pay-switch:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/*
+ * In a forced-colours mode backgrounds are replaced wholesale, so a filled
+ * pill and an empty one resolve identically and the state disappears.
+ */
+@media (forced-colors: active) {
+	input[type="checkbox"].stg-pay-switch {
+		border: 1px solid currentcolor;
+	}
+
+	input[type="checkbox"].stg-pay-switch:checked::before {
+		background: Highlight;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	input[type="checkbox"].stg-pay-switch,
+	input[type="checkbox"].stg-pay-switch::before {
+		transition: none;
+	}
+}
+
+/*
+ * The state word beside the switch.
+ *
+ * Redundant with the thumb's position, deliberately: "is this on?" answered
+ * only by the location of a dot is a question a colour-blind or low-vision
+ * reader has to squint at.
+ */
+.stg-pay-switch__state {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--stg-pay-faint);
+	min-inline-size: 2.5em;
+	line-height: 24px;
+}
+
+input[type="checkbox"].stg-pay-switch:checked + .stg-pay-switch__state {
+	color: var(--stg-pay-primary-ink);
+}
+
+/*
+ * Both words are in the markup and CSS shows one. Printing only the current
+ * word server-side would leave the label reading "Off" the instant somebody
+ * flicked the switch, since nothing re-renders until the form is saved.
+ */
+.stg-pay-switch__on {
+	display: none;
+}
+
+input[type="checkbox"].stg-pay-switch:checked + .stg-pay-switch__state .stg-pay-switch__on {
+	display: inline;
+}
+
+input[type="checkbox"].stg-pay-switch:checked + .stg-pay-switch__state .stg-pay-switch__off {
+	display: none;
+}
+
+/* ----------------------------------------------------------------- chips --
+ *
+ * Multi-select as pills — used for card networks, where five checkboxes on
+ * one line read as a cramped row of squares.
+ */
+
+.stg-pay-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.stg-pay-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	border: 1px solid var(--stg-pay-line);
+	border-radius: 999px;
+	background: var(--stg-pay-surface);
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--stg-pay-muted);
+	cursor: pointer;
+	transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.stg-pay-chip:hover {
+	border-color: var(--stg-pay-primary);
+}
+
+/*
+ * Same specificity rule as the switch above: core's `input[type="checkbox"]`
+ * sets `width`, `height` and `min-width: 1rem`, so the attribute selector has
+ * to be present or the box renders at core's size rather than this one.
+ */
+.stg-pay-chip input[type="checkbox"] {
+	appearance: none;
+	-webkit-appearance: none;
+	position: relative;
+	inline-size: 15px;
+	block-size: 15px;
+	width: 15px;
+	height: 15px;
+	min-width: 15px;
+	margin: 0;
+	border: 1px solid #8c8f94;
+	border-radius: 3px;
+	background: var(--stg-pay-surface);
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.stg-pay-chip input[type="checkbox"]:checked {
+	background: var(--stg-pay-primary);
+	border-color: var(--stg-pay-primary);
+}
+
+/* Replaces core's dashicon SVG, which is sized 1.3125rem and would overflow. */
+.stg-pay-chip input[type="checkbox"]:checked::before {
+	content: "";
+	position: absolute;
+	inset-block-start: 1px;
+	inset-inline-start: 4px;
+	float: none;
+	inline-size: 4px;
+	block-size: 8px;
+	width: 4px;
+	height: 8px;
+	margin: 0;
+	border: solid #fff;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.stg-pay-chip input[type="checkbox"]:focus-visible {
+	outline: 2px solid var(--stg-pay-primary);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+.stg-pay-chip:has(input:checked) {
+	border-color: var(--stg-pay-primary);
+	background: var(--stg-pay-primary-soft);
+	color: var(--stg-pay-primary-ink);
+}
+
+/* ---------------------------------------------------------------- inputs -- */
+
+/*
+ * Money inputs sized for their own placeholder.
+ *
+ * These were `.small-text`, which is 50px wide and clipped the word "Not
+ * priced" to "Not p" — a field whose placeholder does not fit is a field
+ * nobody trusts.
+ */
+.stg-pay-money {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.stg-pay-money input {
+	inline-size: 9rem;
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+	direction: ltr;
+}
+
+.stg-pay-money__currency {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--stg-pay-muted);
+}
+
+.stg-pay-money__interval {
+	font-size: 12px;
+	color: var(--stg-pay-faint);
+}
+
+/* --------------------------------------------------------------- compact -- */
+
+@media (max-width: 782px) {
+	.stg-pay-row {
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.stg-pay-row__control {
+		padding-block-start: 0;
+	}
+}

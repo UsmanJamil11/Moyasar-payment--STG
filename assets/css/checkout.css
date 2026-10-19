@@ -1,0 +1,371 @@
+/**
+ * Payment screens.
+ *
+ * Two rules govern this file, and the first version of it broke both.
+ *
+ * **1. Use the theme's tokens, by their real names.** The first draft invented
+ * `--stg-space-4`, `--stg-radius-md`, `--stg-text-sm`, `--stg-border` and a
+ * dozen others. None of them exist: the theme defines `--stg-4`, `--stg-r-md`,
+ * `--stg-t-sm`, `--stg-line`. Every one of those `var()` calls silently fell
+ * through to its fallback, so the checkout rendered in approximately-right
+ * hand-picked values rather than in STG's actual design system - 8px radii
+ * where the site uses 10px, #e2e2e8 rules where the site uses #e4e6ef. It
+ * looked fine and was off-brand, which is the hardest kind of wrong to notice.
+ *
+ * **2. Never restyle a component the theme owns.** The first draft redefined
+ * `.stg-notice` and `.stg-notice--error`, and because this stylesheet loads
+ * after `stg-app`, it won - so installing the payment plugin quietly changed
+ * how notices looked on payment pages. Shared components belong to the theme.
+ * Everything here is namespaced under `.stg-checkout`, `.stg-pricing` or
+ * `.stg-result`, and where a theme component is needed the markup uses it
+ * as-is.
+ *
+ * Logical properties throughout (`margin-inline`, `padding-inline-start`,
+ * `border-inline-start`) so Arabic renders correctly with no RTL stylesheet
+ * and no `[dir="rtl"]` overrides to keep in sync.
+ */
+
+/* ------------------------------------------------- additive modifiers only */
+
+/*
+ * Two modifiers the theme does not ship, added rather than overridden.
+ *
+ * `.stg-notice` already exists with `--error`, `--info` and `--success`; there
+ * is no `--warning`, and a test-mode banner is precisely a warning. This adds
+ * the variant using the theme's own warning tokens, and touches neither the
+ * base class nor the three that exist. If the theme ever adds its own
+ * `--warning`, delete this block rather than letting the two compete.
+ */
+.stg-notice--warning {
+	background: var(--stg-warning-bg);
+	color: var(--stg-warning);
+	border-color: color-mix(in srgb, var(--stg-warning) 25%, transparent);
+}
+
+/* A narrower column for checkout, where a full-width form reads badly. */
+.stg-shell--narrow {
+	max-width: 44rem;
+	margin-inline: auto;
+}
+
+/* --------------------------------------------------------------- checkout */
+
+.stg-checkout__title {
+	margin-block-end: var(--stg-6);
+}
+
+.stg-checkout__summary {
+	background: var(--stg-surface-2);
+	border: 1px solid var(--stg-line);
+	border-radius: var(--stg-r-lg);
+	padding: var(--stg-6);
+	margin-block-end: var(--stg-8);
+}
+
+/* `.stg-app` raises these above the app's generic h2 size. */
+.stg-app .stg-checkout__summary-title,
+.stg-app .stg-checkout__form-title {
+	font-size: var(--stg-t-xs);
+	font-weight: var(--stg-fw-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--stg-faint);
+	margin-block: 0 var(--stg-4);
+}
+
+.stg-checkout__lines {
+	margin: 0;
+}
+
+.stg-checkout__line {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--stg-4);
+	padding-block: var(--stg-3);
+	border-block-end: 1px solid var(--stg-line);
+}
+
+.stg-checkout__line dt,
+.stg-checkout__line dd {
+	margin: 0;
+}
+
+.stg-checkout__line dt {
+	color: var(--stg-muted);
+}
+
+.stg-checkout__line dd {
+	font-weight: var(--stg-fw-semibold);
+	text-align: end;
+}
+
+.stg-checkout__line--total {
+	border-block-end: 0;
+	padding-block-end: 0;
+	font-size: var(--stg-t-h4);
+}
+
+.stg-checkout__note,
+.stg-checkout__secure {
+	font-size: var(--stg-t-sm);
+	line-height: var(--stg-lh-body);
+	color: var(--stg-muted);
+	margin-block-start: var(--stg-4);
+}
+
+.stg-checkout__form {
+	margin-block-end: var(--stg-8);
+}
+
+/*
+ * Moyasar renders its own markup inside this element, and its internal class
+ * names are not a public API. Only the container is styled - reaching into
+ * their DOM would break silently on their next release, on the page where
+ * breaking silently is least acceptable.
+ */
+#stg-moyasar-form {
+	min-height: 18rem;
+}
+
+#stg-moyasar-form.is-processing {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.stg-checkout__fallback {
+	padding: var(--stg-4);
+	background: var(--stg-danger-bg);
+	color: var(--stg-danger);
+	border-radius: var(--stg-r-md);
+}
+
+.stg-checkout__back {
+	text-align: center;
+}
+
+/* ----------------------------------------------------------- result pages */
+
+.stg-result {
+	text-align: center;
+	padding-block: var(--stg-8);
+}
+
+.stg-result h1 {
+	margin-block-end: var(--stg-4);
+}
+
+.stg-result p {
+	margin-block-end: var(--stg-4);
+	line-height: var(--stg-lh-body);
+}
+
+.stg-result__actions {
+	display: flex;
+	gap: var(--stg-3);
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-block-start: var(--stg-6);
+}
+
+.stg-result__reference code {
+	background: var(--stg-surface-2);
+	border: 1px solid var(--stg-line);
+	padding: 0.15em 0.5em;
+	border-radius: var(--stg-r-sm);
+	/* A reference is Latin hex even inside an Arabic sentence. */
+	direction: ltr;
+	unicode-bidi: isolate;
+}
+
+/*
+ * The confirming state gets a spinner, and it respects the viewer's motion
+ * preference rather than assuming everybody enjoys one.
+ */
+.stg-result--pending h1::after {
+	content: "";
+	display: inline-block;
+	inline-size: 0.8em;
+	block-size: 0.8em;
+	margin-inline-start: 0.5em;
+	border: 2px solid currentcolor;
+	border-block-start-color: transparent;
+	border-radius: 50%;
+	animation: stg-moyasar-spin 0.8s linear infinite;
+	vertical-align: baseline;
+}
+
+@keyframes stg-moyasar-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.stg-result--pending h1::after {
+		animation: none;
+		border-block-start-color: currentcolor;
+		opacity: 0.4;
+	}
+}
+
+/* ---------------------------------------------------------------- pricing */
+
+.stg-pricing__header {
+	text-align: center;
+	max-width: 42rem;
+	margin-inline: auto;
+	margin-block-end: var(--stg-8);
+}
+
+.stg-pricing__grid {
+	display: grid;
+	gap: var(--stg-6);
+	/* 13.5rem, not 16: five plans fit one row on a desktop instead of four and
+	   an orphan (D-152); narrower screens wrap as before. */
+	grid-template-columns: repeat(auto-fit, minmax(min(13.5rem, 100%), 1fr));
+	align-items: stretch;
+}
+
+.stg-plan {
+	border: 1px solid var(--stg-line);
+	border-radius: var(--stg-r-lg);
+	padding: var(--stg-6);
+	background: var(--stg-surface);
+	box-shadow: var(--stg-shadow-sm);
+	display: flex;
+	flex-direction: column;
+}
+
+.stg-plan--current {
+	border-color: var(--stg-primary);
+	box-shadow: 0 0 0 1px var(--stg-primary), var(--stg-shadow-md);
+}
+
+/* "Recommended", set per plan in STG → Plans. */
+.stg-plan--recommended {
+	border-color: var(--stg-primary);
+}
+
+.stg-plan__badge {
+	align-self: flex-start;
+	margin-block: 0 var(--stg-3);
+	padding: var(--stg-1) var(--stg-3);
+	border-radius: 999px;
+	background: var(--stg-primary);
+	color: #fff;
+	font-size: var(--stg-t-small, 0.8125rem);
+	font-weight: var(--stg-fw-semibold);
+}
+
+.stg-plan__name {
+	font-size: var(--stg-t-h3);
+	margin-block: 0 var(--stg-2);
+}
+
+.stg-plan__price {
+	margin-block: 0 var(--stg-4);
+}
+
+.stg-plan__amount {
+	font-size: var(--stg-t-h2);
+	font-weight: var(--stg-fw-extrabold);
+	line-height: var(--stg-lh-heading);
+	display: block;
+}
+
+.stg-plan__amount--tbc {
+	font-size: var(--stg-t-h4);
+	font-weight: var(--stg-fw-semibold);
+	color: var(--stg-muted);
+}
+
+.stg-plan__interval {
+	font-size: var(--stg-t-sm);
+	color: var(--stg-faint);
+}
+
+.stg-plan__description {
+	color: var(--stg-muted);
+	line-height: var(--stg-lh-body);
+}
+
+.stg-plan__features {
+	list-style: none;
+	padding: 0;
+	margin-block: var(--stg-4);
+	flex: 1 1 auto;
+}
+
+.stg-plan__features li {
+	padding-inline-start: 1.5em;
+	position: relative;
+	margin-block-end: var(--stg-2);
+	line-height: var(--stg-lh-body);
+}
+
+.stg-plan__features li::before {
+	content: "✓";
+	position: absolute;
+	inset-inline-start: 0;
+	color: var(--stg-success);
+	font-weight: var(--stg-fw-bold);
+}
+
+.stg-plan__action {
+	margin-block-start: auto;
+}
+
+.stg-plan__form {
+	margin: 0;
+}
+
+.stg-plan__form .stg-btn {
+	inline-size: 100%;
+}
+
+.stg-plan__current-label {
+	font-weight: var(--stg-fw-semibold);
+	margin: 0;
+}
+
+.stg-plan__renews {
+	display: block;
+	font-weight: var(--stg-fw-regular);
+	font-size: var(--stg-t-sm);
+	color: var(--stg-faint);
+}
+
+/* Under the current plan: the Renew button's note, or when renewing opens. */
+.stg-plan__current-label + .stg-plan__form {
+	margin-block-start: var(--stg-3);
+}
+
+.stg-plan__renew-note {
+	margin-block: var(--stg-2) 0;
+	font-size: var(--stg-t-sm);
+	color: var(--stg-faint);
+}
+
+.stg-pricing__note {
+	text-align: center;
+	margin-block-start: var(--stg-8);
+	color: var(--stg-muted);
+}
+
+/* ------------------------------------------------------------------ small */
+
+@media (max-width: 600px) {
+	.stg-checkout__summary,
+	.stg-plan {
+		padding: var(--stg-4);
+	}
+
+	.stg-result__actions .stg-btn {
+		inline-size: 100%;
+	}
+}
+
+/* Room between the "Get in touch" button and the way back. */
+.stg-checkout .stg-btn + .stg-checkout__back {
+	margin-block-start: var(--stg-4);
+}

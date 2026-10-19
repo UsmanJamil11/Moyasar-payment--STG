@@ -1,0 +1,12 @@
+parameters:
+	level: 6
+	paths:
+		- src
+		- templates
+		- stg-moyasar-payments.php
+		- uninstall.php
+	scanDirectories:
+		- ../../../wp-includes
+		- ../stg-core/src
+	excludePaths:
+		- vendor
