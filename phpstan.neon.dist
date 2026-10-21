@@ -5,8 +5,13 @@ parameters:
 		- templates
 		- stg-moyasar-payments.php
 		- uninstall.php
+	bootstrapFiles:
+		- tests/phpstan-bootstrap.php
 	scanDirectories:
 		- ../../../wp-includes
 		- ../stg-core/src
+		# The Elementor widget extends Elementor's classes.
+		- ../elementor/includes
+		- ../elementor/core
 	excludePaths:
 		- vendor
