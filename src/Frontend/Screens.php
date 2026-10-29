@@ -144,7 +144,7 @@ final class Screens {
 		);
 
 		if ( ! $attempt['allowed'] ) {
-			wp_safe_redirect( add_query_arg( 'slow_down', '1', home_url( '/pricing/' ) ) );
+			wp_safe_redirect( add_query_arg( 'slow_down', '1', self::plans_url() ) );
 			exit;
 		}
 
@@ -154,13 +154,36 @@ final class Screens {
 
 		if ( is_wp_error( $intent ) ) {
 			wp_safe_redirect(
-				add_query_arg( 'unavailable', '1', home_url( '/pricing/' ) )
+				add_query_arg( 'unavailable', '1', self::plans_url() )
 			);
 			exit;
 		}
 
 		wp_safe_redirect( Intents::checkout_url( (string) $intent['public_ref'] ) );
 		exit;
+	}
+
+	/**
+	 * Where this visitor chooses a plan.
+	 *
+	 * A member who can hold a plan chooses it inside the dashboard
+	 * (/account/billing/#stg-plans, D-213); everyone else on /pricing/. The
+	 * theme decides, since it owns the billing screen; without it, /pricing/.
+	 * The plan cards on both read the same `expired` / `unavailable` /
+	 * `slow_down` notices, so a query argument added to this URL still shows.
+	 *
+	 * @return string
+	 */
+	public static function plans_url(): string {
+		if ( function_exists( 'hello_stg_plans_url' ) ) {
+			$url = (string) hello_stg_plans_url();
+
+			if ( '' !== $url ) {
+				return $url;
+			}
+		}
+
+		return home_url( '/pricing/' );
 	}
 
 	/**
@@ -268,7 +291,7 @@ final class Screens {
 
 		// No reference at all: somebody typed the path. Send them to choose.
 		if ( '' === $reference ) {
-			wp_safe_redirect( home_url( '/pricing/' ) );
+			wp_safe_redirect( self::plans_url() );
 			exit;
 		}
 
@@ -304,7 +327,7 @@ final class Screens {
 		}
 
 		if ( strtotime( (string) $row['expires_at'] . ' UTC' ) < time() ) {
-			wp_safe_redirect( add_query_arg( 'expired', '1', home_url( '/pricing/' ) ) );
+			wp_safe_redirect( add_query_arg( 'expired', '1', self::plans_url() ) );
 			exit;
 		}
 	}

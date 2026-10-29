@@ -163,7 +163,7 @@ require STG_MOYASAR_DIR . 'templates/parts/open.php';
 		<?php endif; ?>
 
 		<p class="stg-checkout__back">
-			<a href="<?php echo esc_url( home_url( '/pricing/' ) ); ?>">
+			<a href="<?php echo esc_url( \STG\Moyasar\Frontend\Screens::plans_url() ); ?>">
 				<?php esc_html_e( 'Choose a different plan', 'stg-moyasar-payments' ); ?>
 			</a>
 		</p>

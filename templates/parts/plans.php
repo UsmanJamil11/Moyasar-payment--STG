@@ -7,7 +7,8 @@
  * is how a site ends up quoting two different prices depending on which URL
  * the customer arrived through.
  *
- * Expects `$show_heading` (bool) from the caller; defaults to true.
+ * Expects `$show_heading` (bool) from the caller; defaults to true. Optional
+ * `$name_level` (2-4) sets the plan names' heading level; defaults to 2.
  *
  * @package STG\Moyasar
  */
@@ -24,6 +25,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $stg_show_heading = isset( $show_heading ) ? (bool) $show_heading : true;
+// h3 when the cards sit under a section heading (the dashboard's billing page).
+$stg_name_tag = 'h' . ( isset( $name_level ) ? min( 4, max( 2, (int) $name_level ) ) : 2 );
 // Wording from the Elementor widget (empty = the standard, translated text).
 $stg_heading_title = isset( $heading_title ) && '' !== $heading_title ? (string) $heading_title : __( 'Plans', 'stg-moyasar-payments' );
 $stg_heading_intro = isset( $heading_intro ) && '' !== $heading_intro ? (string) $heading_intro : __( 'Everyone can post projects, browse work and send proposals for free. Paid plans buy more of it, not the right to take part.', 'stg-moyasar-payments' );
@@ -89,7 +92,7 @@ $stg_renew_opens  = $stg_live ? Subscription_Service::renewal_opens_at( $stg_liv
 					<p class="stg-plan__badge"><?php esc_html_e( 'Recommended', 'stg-moyasar-payments' ); ?></p>
 				<?php endif; ?>
 
-				<h2 class="stg-plan__name"><?php echo esc_html( (string) $stg_plan['name'] ); ?></h2>
+				<<?php echo esc_html( $stg_name_tag ); ?> class="stg-plan__name"><?php echo esc_html( (string) $stg_plan['name'] ); ?></<?php echo esc_html( $stg_name_tag ); ?>>
 
 				<p class="stg-plan__price">
 					<?php if ( $stg_is_free ) : ?>

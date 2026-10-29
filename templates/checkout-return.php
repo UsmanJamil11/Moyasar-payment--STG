@@ -92,7 +92,7 @@ require STG_MOYASAR_DIR . 'templates/parts/open.php';
 					<a class="stg-btn stg-btn--primary" href="<?php echo esc_url( Intents::checkout_url( $stg_reference ) ); ?>">
 						<?php esc_html_e( 'Try again', 'stg-moyasar-payments' ); ?>
 					</a>
-					<a class="stg-btn stg-btn--ghost" href="<?php echo esc_url( home_url( '/pricing/' ) ); ?>">
+					<a class="stg-btn stg-btn--ghost" href="<?php echo esc_url( \STG\Moyasar\Frontend\Screens::plans_url() ); ?>">
 						<?php esc_html_e( 'Choose a different plan', 'stg-moyasar-payments' ); ?>
 					</a>
 				</p>
@@ -141,7 +141,7 @@ require STG_MOYASAR_DIR . 'templates/parts/open.php';
 				<p><?php esc_html_e( 'Your bank did not approve the payment. You have not been charged.', 'stg-moyasar-payments' ); ?></p>
 				<p><?php esc_html_e( 'This is usually a card limit, an expired card, or a block on online payments. Trying a different card often works.', 'stg-moyasar-payments' ); ?></p>
 				<p class="stg-result__actions">
-					<a class="stg-btn stg-btn--primary" href="<?php echo esc_url( home_url( '/pricing/' ) ); ?>">
+					<a class="stg-btn stg-btn--primary" href="<?php echo esc_url( \STG\Moyasar\Frontend\Screens::plans_url() ); ?>">
 						<?php esc_html_e( 'Try again', 'stg-moyasar-payments' ); ?>
 					</a>
 				</p>
@@ -153,7 +153,7 @@ require STG_MOYASAR_DIR . 'templates/parts/open.php';
 				<h1><?php esc_html_e( 'This checkout has expired', 'stg-moyasar-payments' ); ?></h1>
 				<p><?php esc_html_e( 'You have not been charged. Start again and it will only take a moment.', 'stg-moyasar-payments' ); ?></p>
 				<p class="stg-result__actions">
-					<a class="stg-btn stg-btn--primary" href="<?php echo esc_url( home_url( '/pricing/' ) ); ?>">
+					<a class="stg-btn stg-btn--primary" href="<?php echo esc_url( \STG\Moyasar\Frontend\Screens::plans_url() ); ?>">
 						<?php esc_html_e( 'Choose a plan', 'stg-moyasar-payments' ); ?>
 					</a>
 				</p>

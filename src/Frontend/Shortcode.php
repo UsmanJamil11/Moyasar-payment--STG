@@ -42,6 +42,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * `heading="no"` drops the title and lede, for when the surrounding design
  * already provides them - which is the normal case inside a page builder.
+ *
+ * `name_level="3"` makes each plan name an h3 instead of an h2, for cards that
+ * sit under a section heading (the dashboard's Plan and billing). 2 to 4.
  */
 final class Shortcode {
 
@@ -68,7 +71,8 @@ final class Shortcode {
 	public function render( $atts = array() ): string {
 		$atts = shortcode_atts(
 			array(
-				'heading' => 'yes',
+				'heading'    => 'yes',
+				'name_level' => '2',
 			),
 			is_array( $atts ) ? $atts : array(),
 			self::TAG
@@ -98,6 +102,7 @@ final class Shortcode {
 		}
 
 		$show_heading = 'no' !== strtolower( trim( (string) $atts['heading'] ) );
+		$name_level   = min( 4, max( 2, absint( $atts['name_level'] ) ) );
 
 		ob_start();
 
