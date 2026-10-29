@@ -3,7 +3,7 @@
  * Plugin Name:       STG Payments — Moyasar
  * Plugin URI:        https://servethegalaxy.com/
  * Description:       Subscription payment processing for Serve The Galaxy through the Moyasar gateway. Provides mada, Visa and Mastercard checkout, mandatory server-side payment verification, webhook handling with reconciliation, a transaction record with a full audit trail, and separate test and live environments guarded by a preflight checklist. Card details pass from the customer's browser directly to Moyasar and never reach this server. STG never holds funds between users — this charges for STG's own subscription plans only.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 6.8
  * Requires PHP:      8.1
  * Requires Plugins:  stg-core
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION     = '1.0.1';
+const VERSION     = '1.0.2';
 const MIN_PHP     = '8.1';
 const MIN_WP      = '6.8';
 
